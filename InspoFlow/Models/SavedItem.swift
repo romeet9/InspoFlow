@@ -8,17 +8,21 @@ final class SavedItem {
     var timestamp: Date
     var type: ItemType
     @Attribute(.externalStorage) var screenshotData: Data?
+    var s3Url: String? // [NEW] Cloud URL for the image
     var title: String
     var summary: String?
+    var tags: [String] = [] // [NEW] Tags for filtering
 
-    init(id: UUID = UUID(), url: URL? = nil, timestamp: Date = Date(), type: ItemType = .website, screenshotData: Data? = nil, title: String = "Untitled", summary: String? = nil) {
+    init(id: UUID = UUID(), url: URL? = nil, timestamp: Date = Date(), type: ItemType = .website, screenshotData: Data? = nil, s3Url: String? = nil, title: String = "Untitled", summary: String? = nil, tags: [String] = []) {
         self.id = id
         self.url = url
         self.timestamp = timestamp
         self.type = type
         self.screenshotData = screenshotData
+        self.s3Url = s3Url
         self.title = title
         self.summary = summary
+        self.tags = tags
     }
     
     enum ItemType: String, Codable {
