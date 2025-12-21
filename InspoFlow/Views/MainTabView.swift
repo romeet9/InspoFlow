@@ -1,31 +1,39 @@
 import SwiftUI
 
-struct MainTabView: View {
+// RENAMED TO FORCE RECOMPILE
+struct RootTabView: View {
     @EnvironmentObject var screenshotService: ScreenshotService
+    @State private var selectedTab: Int = 0
     
     var body: some View {
-        ZStack(alignment: .top) {
-            TabView {
-                // Tab 1: Home
-                HomeView()
-                    .tabItem {
-                        Label("Home", systemImage: "house.fill")
-                    }
-                
-                // Tab 2: Timeline
-                InspoTimelineView()
-                    .tabItem {
-                        Label("Timeline", systemImage: "clock.fill")
-                    }
-                
-                // Tab 3: Profile
-                ProfileView()
-                    .tabItem {
-                        Label("Profile", systemImage: "person.circle.fill")
-                    }
-            }
+        TabView(selection: $selectedTab) {
+            // Tab 1: Home (Using New GridHomeView)
+            GridHomeView()
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
+                .tag(0)
             
-            // Toast Overlay Removed
+            // Tab 2: Timeline (Disabled)
+//            InspoTimelineView()
+//                .tabItem {
+//                    Label("Timeline", systemImage: "clock.fill")
+//                }
+//                .tag(1)
+            
+            // Tab 3: Search
+            SearchView() 
+                .tabItem {
+                    Label("Search", systemImage: "magnifyingglass")
+                }
+                .tag(2)
+            
+            // Tab 4: Profile
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.circle.fill")
+                }
+                .tag(3)
         }
         .sheet(isPresented: $screenshotService.showIngestionSheet) {
             ScreenshotIngestionView(
@@ -37,5 +45,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    RootTabView()
+        .environmentObject(ScreenshotService())
 }

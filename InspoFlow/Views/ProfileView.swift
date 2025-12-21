@@ -1,56 +1,24 @@
 import SwiftUI
-import PhotosUI
 import SwiftData
+import FirebaseAuth
 
 struct ProfileView: View {
     @AppStorage("userName") private var userName = "Inspo User"
     @AppStorage("userBio") private var userBio = "Design enthusiast & collector."
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @Query private var savedItems: [SavedItem]
-    
-    @State private var selectedItem: PhotosPickerItem?
-    @State private var profileImage: UIImage?
     
     var body: some View {
         NavigationStack {
             Form {
-                // Section 1: Profile Header
-                Section {
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 16) {
-                            if let profileImage {
-                                Image(uiImage: profileImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 100, height: 100)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.accentColor, lineWidth: 2))
-                            } else {
-                                Image(systemName: "person.circle.fill")
-                                    .resizable()
-                                    .foregroundStyle(.gray)
-                                    .frame(width: 100, height: 100)
-                            }
-                            
-                            PhotosPicker(selection: $selectedItem, matching: .images) {
-                                Text("Edit Photo")
-                                    .font(.caption)
-                                    .buttonStyle(.bordered)
-                            }
-                        }
-                        Spacer()
-                    }
-                    .listRowBackground(Color.clear)
-                }
-                
-                // Section 2: Info
+                // Section 1: Info
                 Section("About You") {
                     TextField("Name", text: $userName)
                     TextField("Bio", text: $userBio, axis: .vertical)
                         .lineLimit(3...6)
                 }
                 
-                // Section 3: Stats
+                // Section 2: Stats
                 Section("Statistics") {
                     HStack {
                         Text("Inspirations Collected")
@@ -67,7 +35,7 @@ struct ProfileView: View {
                     }
                 }
                 
-                // Section 4: Share
+                // Section 3: Share
                 Section {
                     ShareLink(
                         item: generateShareSummary(),
@@ -77,39 +45,27 @@ struct ProfileView: View {
                         Label("Share Profile", systemImage: "square.and.arrow.up")
                     }
                 }
-            }
-            .navigationTitle("Profile")
-            .onChange(of: selectedItem) {
-                Task {
-                    if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
-                        profileImage = uiImage
-                        saveImageToDisk(data: data)
+                
+                // Section 4: Account
+                Section {
+                    Button(role: .destructive, action: signOut) {
+                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 }
             }
-            .onAppear {
-                loadImageFromDisk()
+            .navigationTitle("Profile")
+        }
+    }
+    
+    private func signOut() {
+        do {
+            try Auth.auth().signOut()
+            withAnimation {
+                hasCompletedOnboarding = false
             }
+        } catch {
+            print("Error signing out: \(error.localizedDescription)")
         }
-    }
-    
-    // MARK: - Persistence Helpers (Simple Disk Storage)
-    
-    private func saveImageToDisk(data: Data) {
-        let url = getDocumentsDirectory().appendingPathComponent("profile.jpg")
-        try? data.write(to: url)
-    }
-    
-    private func loadImageFromDisk() {
-        let url = getDocumentsDirectory().appendingPathComponent("profile.jpg")
-        if let data = try? Data(contentsOf: url) {
-            profileImage = UIImage(data: data)
-        }
-    }
-    
-    private func getDocumentsDirectory() -> URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
     
     private func generateShareSummary() -> String {

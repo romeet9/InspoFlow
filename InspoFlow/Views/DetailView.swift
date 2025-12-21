@@ -8,25 +8,17 @@ struct DetailView: View {
         ScrollView {
             VStack(spacing: 32) {
                 // 1. Hero Image (Centered Card)
-                if let data = item.screenshotData, let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-                        .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                // 1. Hero Image (Centered Card)
+                if let url = item.url {
+                     // Live Website Preview (Header)
+                     WebView(url: url, isInteractive: true) // Allow interaction in detail view? User asked for "preview" but usually detail implies browsing. Let's make it interactive here for better UX, or keep false to just be visual. User said "replace screenshot". Let's enable interaction so they can actually use it.
+                         .frame(height: 500) // Taller for detail view
+                         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                         .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
+                         .padding(.horizontal, 20)
+                         .padding(.top, 20)
                 } else {
-                    RoundedRectangle(cornerRadius: 32, style: .continuous)
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(height: 300)
-                        .overlay(
-                            Image(systemName: item.themeIcon)
-                                .font(.system(size: 80))
-                                .foregroundStyle(.secondary)
-                        )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                    fallbackImageOrPlaceholder
                 }
                 
                 // 2. Header Info
@@ -115,5 +107,30 @@ struct DetailView: View {
         }
         .background(Color(.systemBackground))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    var fallbackImageOrPlaceholder: some View {
+        Group {
+            if let data = item.screenshotData, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                    .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+            } else {
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(height: 300)
+                    .overlay(
+                        Image(systemName: item.themeIcon)
+                            .font(.system(size: 80))
+                            .foregroundStyle(.secondary)
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+            }
+        }
     }
 }
