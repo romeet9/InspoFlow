@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		84D788822EEF6FF7002D9376 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 84D788812EEF6FF7002D9376 /* FirebaseAI */; };
+		84D788842EEF6FF7002D9376 /* FirebaseAILogic in Frameworks */ = {isa = PBXBuildFile; productRef = 84D788832EEF6FF7002D9376 /* FirebaseAILogic */; };
+		84D788862EEF6FF7002D9376 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 84D788852EEF6FF7002D9376 /* FirebaseAnalytics */; };
+		84D788882EEF6FF7002D9376 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 84D788872EEF6FF7002D9376 /* FirebaseAnalyticsCore */; };
+		84D7888A2EEF6FF7002D9376 /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = 84D788892EEF6FF7002D9376 /* FirebaseAnalyticsIdentitySupport */; };
+		84D7888F2EEF730A002D9376 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 84D7888E2EEF730A002D9376 /* FirebaseAuth */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		84C2A5072EEEC66F00DA1089 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -23,9 +32,22 @@
 		846AF21E2EECDAB800A0A4BC /* InspoFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InspoFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		84D788972EEF77D9002D9376 /* Exceptions for "InspoFlow" folder in "InspoFlow" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 846AF21D2EECDAB800A0A4BC /* InspoFlow */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		846AF2202EECDAB800A0A4BC /* InspoFlow */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				84D788972EEF77D9002D9376 /* Exceptions for "InspoFlow" folder in "InspoFlow" target */,
+			);
 			path = InspoFlow;
 			sourceTree = "<group>";
 		};
@@ -36,6 +58,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84D788842EEF6FF7002D9376 /* FirebaseAILogic in Frameworks */,
+				84D7888F2EEF730A002D9376 /* FirebaseAuth in Frameworks */,
+				84D7888A2EEF6FF7002D9376 /* FirebaseAnalyticsIdentitySupport in Frameworks */,
+				84D788822EEF6FF7002D9376 /* FirebaseAI in Frameworks */,
+				84D788862EEF6FF7002D9376 /* FirebaseAnalytics in Frameworks */,
+				84D788882EEF6FF7002D9376 /* FirebaseAnalyticsCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				846AF2202EECDAB800A0A4BC /* InspoFlow */,
+				84D7888D2EEF730A002D9376 /* Frameworks */,
 				846AF21F2EECDAB800A0A4BC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,6 +85,13 @@
 				846AF21E2EECDAB800A0A4BC /* InspoFlow.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		84D7888D2EEF730A002D9376 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -79,6 +115,12 @@
 			);
 			name = InspoFlow;
 			packageProductDependencies = (
+				84D788812EEF6FF7002D9376 /* FirebaseAI */,
+				84D788832EEF6FF7002D9376 /* FirebaseAILogic */,
+				84D788852EEF6FF7002D9376 /* FirebaseAnalytics */,
+				84D788872EEF6FF7002D9376 /* FirebaseAnalyticsCore */,
+				84D788892EEF6FF7002D9376 /* FirebaseAnalyticsIdentitySupport */,
+				84D7888E2EEF730A002D9376 /* FirebaseAuth */,
 			);
 			productName = InspoFlow;
 			productReference = 846AF21E2EECDAB800A0A4BC /* InspoFlow.app */;
@@ -108,6 +150,9 @@
 			);
 			mainGroup = 846AF2152EECDAB800A0A4BC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 846AF21F2EECDAB800A0A4BC /* Products */;
 			projectDirPath = "";
@@ -271,6 +316,7 @@
 				DEVELOPMENT_TEAM = U8X3ULW886;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = InspoFlow/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "\"InspoFlow needs access to import your screenshots automatically.\"";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -306,6 +352,7 @@
 				DEVELOPMENT_TEAM = U8X3ULW886;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = InspoFlow/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "\"InspoFlow needs access to import your screenshots automatically.\"";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -352,6 +399,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		84D788812EEF6FF7002D9376 /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		84D788832EEF6FF7002D9376 /* FirebaseAILogic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAILogic;
+		};
+		84D788852EEF6FF7002D9376 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		84D788872EEF6FF7002D9376 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		84D788892EEF6FF7002D9376 /* FirebaseAnalyticsIdentitySupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsIdentitySupport;
+		};
+		84D7888E2EEF730A002D9376 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84D788802EEF6FF7002D9376 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 846AF2162EECDAB800A0A4BC /* Project object */;
 }

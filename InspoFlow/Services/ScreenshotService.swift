@@ -4,6 +4,7 @@ import SwiftData
 import Combine
 import Combine
 
+@MainActor
 class ScreenshotService: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
     var isAuthorized = false
     @Published var latestScreenshot: UIImage? 
@@ -42,7 +43,7 @@ class ScreenshotService: NSObject, ObservableObject, PHPhotoLibraryChangeObserve
     }
     
     // MARK: - Photo Library Changes
-    func photoLibraryDidChange(_ changeInstance: PHChange) {
+    nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
         DispatchQueue.main.async {
             self.checkForNewScreenshots()
         }
