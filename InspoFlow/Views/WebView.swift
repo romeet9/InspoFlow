@@ -4,7 +4,6 @@ import WebKit
 struct WebView: UIViewRepresentable {
     let url: URL
     let isInteractive: Bool
-    var enableAutoScroll: Bool = false
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -41,20 +40,7 @@ struct WebView: UIViewRepresentable {
         }
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            if parent.enableAutoScroll {
-                // Auto-scroll logic: scroll down by 1px every 50ms
-                let js = """
-                function startAutoScroll() {
-                    let lastScrollTop = -1;
-                    setInterval(function() {
-                        window.scrollBy(0, 1);
-                        // Check if we hit bottom (optional, functionality to loop or bounce could be added later)
-                    }, 50);
-                }
-                startAutoScroll();
-                """
-                webView.evaluateJavaScript(js, completionHandler: nil)
-            }
+            // Navigation finished
         }
     }
 }

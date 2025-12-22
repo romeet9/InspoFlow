@@ -519,7 +519,7 @@ struct InspoCardView: View {
                 .aspectRatio(4/3, contentMode: .fit)
                 .overlay {
                     if let url = item.url {
-                        WebView(url: url, isInteractive: false, enableAutoScroll: true)
+                        WebView(url: url, isInteractive: false)
                     } else if let uiImage = image {
                         Image(uiImage: uiImage)
                             .resizable()
