@@ -3,38 +3,39 @@
 
 InspoFlow is a native iOS application designed for designers, developers, and creatives who live in their screenshots. It transforms your messy camera roll into a curated, searchable timeline of inspiration, powered by AI.
 
-![Banner](https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop)
+<p align="center">
+  <img src="InspoFlow/Screenshots/Homescreen.png" width="300" alt="Homescreen">
+</p>
 
 ## ✨ Key Features
 
 *   **智能 Screenshot Ingestion**: Automatically detects screenshots and organizes them into a dedicated feed.
-*   **AI-Powered Analysis**: Uses **AWS Rekognition** to scan images, extracting text, detecting valid URLs, and generating smart summaries automatically.
-*   **Connected Timeline**: A beautiful, continuous stream of your inspiration, grouped by time for easy browsing.
-*   **Savee-Style Detail View**: A clean, minimalist interface that puts your content front and center.
-*   **Living Backgrounds** (Optional): Includes a dynamic, animated gradient system for a premium aesthetic.
-*   **Privacy First**: All data is stored locally on your device using **SwiftData**.
+*   **AI-Powered Analysis**: Uses **Vision LLMs** (via Hugging Face) to scan images, generating smart summaries, categorizing content, and extracting tags automatically.
+*   **Cloud Persistence**: All your inspirations are synced to **Supabase**, ensuring your collection is safe and accessible.
+*   **Beautiful UI**: A clean, minimalist interface inspired by Savee and Pinterest, designed for maximum focus on content.
+*   **Dynamic Aesthetics**: Fluid animations and a premium look and feel that adapts to your system's light/dark mode.
+
+## 📸 Screenshots
+
+| Homescreen | Ingestion Flow | Analysis |
+|:---:|:---:|:---:|
+| <img src="InspoFlow/Screenshots/Homescreen.png" width="200"> | <img src="InspoFlow/Screenshots/Analyze%20&%20Save%20screen.png" width="200"> | <img src="InspoFlow/Screenshots/Analysing%20screen.png" width="200"> |
 
 ## 🛠 Tech Stack
 
 *   **Language**: Swift 5.10
-*   **UI Framework**: SwiftUI (NavigationStack, MeshGradient, Charts)
-*   **Local Database**: SwiftData (Persistent caching)
-*   **Cloud AI**: AWS Rekognition (Text & Label usage)
-*   **Architecture**: MVVM-C with Clean Architecture principles.
+*   **UI Framework**: SwiftUI (NavigationStack, MeshGradient)
+*   **Backend**: Supabase (Database & Storage)
+*   **AI Engine**: Hugging Face Inference API (Qwen/VL Models)
+*   **Local Cache**: SwiftData
 
 ## 🚀 How to Install
 
-Since this is an open-source project without a paid Enterprise certificate, you have two options:
-
-### Option 1: Build from Source (Recommended)
 1.  Clone this repository.
 2.  Open `InspoFlow.xcodeproj` in Xcode.
-3.  Change the **Signing Team** to your personal Apple ID.
-4.  Plug in your iPhone and hit **Run**.
-
-### Option 2: Side-Load (AltStore)
-1.  Download the latest `.ipa` from the Releases tab (if available).
-2.  Use **AltStore** or **SideStore** to install it on your device.
+3.  Configure your API keys in `Services/SupabaseConfig.swift` and `Services/HuggingFaceConfig.swift`.
+4.  Change the **Signing Team** to your personal Apple ID.
+5.  Plug in your iPhone and hit **Run**.
 
 ## 🤝 Contributing
 InspoFlow is open source! Feel free to fork the repo, create a feature branch, and submit a Pull Request.
