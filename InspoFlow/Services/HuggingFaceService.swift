@@ -21,6 +21,13 @@ class HuggingFaceService: ObservableObject {
         
         print("\n==========================================")
         print("🤗 STARTING HUGGINGFACE ANALYSIS")
+        
+        let token = HuggingFaceConfig.apiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        if token == "YOUR_HF_TOKEN" {
+            return errorResult("Please configure API Token in HuggingFaceConfig.swift")
+        }
+        print("🔑 Using Token in Analyze: \(token.prefix(4))...\(token.suffix(4))")
+        
         print("==========================================\n")
         
         // 1. Prepare Image
@@ -70,7 +77,8 @@ class HuggingFaceService: ObservableObject {
             
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
-            request.addValue("Bearer \(HuggingFaceConfig.apiToken)", forHTTPHeaderField: "Authorization")
+            let token = HuggingFaceConfig.apiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             request.addValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = httpBody
             
@@ -154,5 +162,86 @@ class HuggingFaceService: ObservableObject {
         UIGraphicsEndImageContext()
         
         return newImage ?? image
+    }
+    func chat(message: String) async -> String {
+        let token = HuggingFaceConfig.apiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if token == "YOUR_HF_TOKEN" {
+            return "Please configure your API Token in HuggingFaceConfig.swift"
+        }
+        
+        print("🔑 Using Token: \(token.prefix(4))...\(token.suffix(4))")
+        
+        isAnalyzing = true
+        defer { isAnalyzing = false }
+        
+        // 1. Prepare Request
+        let endpoint = "https://router.huggingface.co/v1/chat/completions"
+        guard let url = URL(string: endpoint) else { return "Error: Invalid URL" }
+        
+        let systemPrompt = """
+        You are a strict AI assistant for a web design inspiration app.
+        
+        RULES:
+        1. Answer ONLY questions related to UI/UX design, website inspiration, or design tools.
+        2. If a user asks about anything else (e.g. code, life, general knowledge), politely refuse: "I can only help with design inspiration."
+        3. When recommending websites, provide ONLY the direct valid URLs (e.g. https://dribbble.com).
+        4. DO NOT write descriptions, lists, or introductions. Just output the links separated by spaces.
+        5. Your goal is to populate the user's feed with link cards, not text.
+        """
+        
+        // OpenAI-Compatible Payload
+        let payload: [String: Any] = [
+            "model": HuggingFaceConfig.modelId,
+            "messages": [
+                ["role": "system", "content": systemPrompt],
+                ["role": "user", "content": message]
+            ],
+            "max_tokens": 512,
+            "stream": false
+        ]
+
+        do {
+            let httpBody = try JSONSerialization.data(withJSONObject: payload)
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = httpBody
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                 return "Connection Error"
+            }
+            
+            if httpResponse.statusCode != 200 {
+                let errorBody = String(data: data, encoding: .utf8) ?? "Unknown Error"
+                print("HF Chat Error: \(errorBody)")
+                if httpResponse.statusCode == 401 {
+                    return "Invalid API Token. Please check HuggingFaceConfig.swift."
+                }
+                return "AI Error (\(httpResponse.statusCode)). Please try again."
+            }
+            
+            // Re-use existing struct for parsing
+            struct HFResponse: Decodable {
+                struct Choice: Decodable {
+                    struct Message: Decodable {
+                        let content: String
+                    }
+                    let message: Message
+                }
+                let choices: [Choice]
+            }
+            
+            let chatResp = try JSONDecoder().decode(HFResponse.self, from: data)
+            return chatResp.choices.first?.message.content ?? "No response generated."
+            
+        } catch {
+            print("Chat Error: \(error)")
+            return "Connection failed. Please check your internet."
+        }
     }
 }

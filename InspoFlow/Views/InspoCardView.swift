@@ -518,9 +518,7 @@ struct InspoCardView: View {
             Color.clear
                 .aspectRatio(4/3, contentMode: .fit)
                 .overlay {
-                    if let url = item.url {
-                        WebView(url: url, isInteractive: false)
-                    } else if let uiImage = image {
+                    if let uiImage = image {
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -577,7 +575,7 @@ struct InspoCardView: View {
         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 1) // Subtle Dynamic Border
         )
         .contentShape(Rectangle())
         .task {

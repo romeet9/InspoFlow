@@ -46,6 +46,7 @@ struct InspoFlowApp: App {
     #else
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     #endif
+    @AppStorage("isDarkMode") private var isDarkMode = false
     @StateObject private var screenshotService = ScreenshotService()
 
     var body: some Scene {
@@ -60,7 +61,7 @@ struct InspoFlowApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.5), value: hasCompletedOnboarding)
-            .preferredColorScheme(.light) // Enforce the Light Theme
+            .preferredColorScheme(isDarkMode ? .dark : .light) // Dynamic Theme
             .environmentObject(screenshotService) // Inject Globally
             .onAppear {
                 // Inject Context and Start Service

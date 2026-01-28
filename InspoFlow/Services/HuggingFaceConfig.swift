@@ -7,7 +7,6 @@ struct HuggingFaceConfig {
     static let apiToken = "YOUR_HF_TOKEN" 
     
     // Model ID to use. 
-    // Explicitly allowed by HF API Error Message (Qwen 2.5 is supported on v1/chat).
-    static let modelId = "Qwen/Qwen2.5-VL-7B-Instruct"
+    // Switched to 72B as 7B was throwing 500 Internal Errors.
+    static let modelId = "Qwen/Qwen2.5-VL-72B-Instruct"
 }
-

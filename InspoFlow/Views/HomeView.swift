@@ -7,6 +7,9 @@ struct GridHomeView: View {
     @State private var savedItems: [SavedItem] = []
     @State private var isLoading = true
     
+    // Theme
+    @AppStorage("isDarkMode") private var isDarkMode = false
+    
     // UI State
     @State private var isSelectionMode = false
     @State private var selectedItems = Set<SavedItem>()
@@ -99,6 +102,14 @@ struct GridHomeView: View {
                             }
                             .disabled(selectedItems.isEmpty)
                         } else {
+                            // Dark Mode Toggle
+                            Button {
+                                ThemeTransition.toggleTheme(isDarkMode: $isDarkMode)
+                            } label: {
+                                Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                                    .contentTransition(.symbolEffect(.replace))
+                            }
+                            
                             Button {
                                 startSelectionMode()
                             } label: {

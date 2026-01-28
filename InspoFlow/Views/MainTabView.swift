@@ -28,12 +28,19 @@ struct RootTabView: View {
                 }
                 .tag(2)
             
+            // Tab 3: AI Assistant
+            AIChatView()
+                .tabItem {
+                    Label("Assistant", systemImage: "sparkles")
+                }
+                .tag(3)
+            
             // Tab 4: Profile
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.circle.fill")
                 }
-                .tag(3)
+                .tag(4)
         }
         .sheet(isPresented: $screenshotService.showIngestionSheet) {
             ScreenshotIngestionView(
