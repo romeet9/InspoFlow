@@ -4,7 +4,7 @@
 InspoFlow is a native iOS application designed for designers, developers, and creatives who live in their screenshots. It transforms your messy camera roll into a curated, searchable timeline of inspiration, powered by AI.
 
 <p align="center">
-  <img src="InspoFlow/Screenshots/Homescreen.png" width="300" alt="Homescreen">
+  <img src="InspoFlow/Screenshots/homescreen.png" width="300" alt="Homescreen">
 </p>
 
 ## ✨ Key Features
@@ -19,7 +19,7 @@ InspoFlow is a native iOS application designed for designers, developers, and cr
 
 | Homescreen | Ingestion Flow | Analysis |
 |:---:|:---:|:---:|
-| <img src="InspoFlow/Screenshots/Homescreen.png" width="200"> | <img src="InspoFlow/Screenshots/Analyze%20&%20Save%20screen.png" width="200"> | <img src="InspoFlow/Screenshots/Analysing%20screen.png" width="200"> |
+| <img src="InspoFlow/Screenshots/homescreen.png" width="200"> | <img src="InspoFlow/Screenshots/analyze_save.png" width="200"> | <img src="InspoFlow/Screenshots/analysing.png" width="200"> |
 
 ## 🛠 Tech Stack
 
