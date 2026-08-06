@@ -9,80 +9,84 @@ struct ScreenshotIngestionView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
-    @StateObject private var aiService = HuggingFaceService()
+    @StateObject private var aiService = NvidiaAIService()
     
     // UI Feedback
     @State private var duplicateAlertItem: String?
+    @State private var isUploading = false
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color(.systemGroupedBackground).ignoresSafeArea() // Clean background
-                
+            ScrollView {
                 VStack(spacing: 24) {
-                    Spacer()
-                    
-                    // Image Area
-                    if let uiImage = selectedImage {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 400)
-                            .modifier(AIGlowingBorder(isAnimating: aiService.isAnalyzing, cornerRadius: 16))
-                            .shadow(radius: aiService.isAnalyzing ? 0 : 5)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal)
-                    } else {
-                        PhotosPicker(selection: $selectedItem, matching: .images) {
-                            VStack(spacing: 16) {
-                                Image(systemName: "photo.badge.plus")
-                                    .font(.system(size: 60))
-                                    .foregroundStyle(Color.accentColor)
-                                Text("Tap to Select Screenshot")
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 300)
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .padding(.horizontal)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    
-                    Spacer()
-                    
-                    // Action Area
-                    VStack(spacing: 16) {
-                        if aiService.isAnalyzing {
-                            AILoaderText()
-                                .frame(height: 56)
-                        } else if isUploading {
-                             ProgressView("Uploading to Cloud...")
-                                 .frame(height: 56)
+                    // MARK: - Image Selection Area
+                    ZStack {
+                        if let uiImage = selectedImage {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxHeight: 500)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(Color(.separator), lineWidth: 1)
+                                )
                         } else {
-                             Button {
-                                 if let img = selectedImage {
-                                     startAnalysis(image: img)
-                                 }
-                             } label: {
-                                 Text("Analyze & Save")
-                                     .font(.headline)
-                                     .frame(maxWidth: .infinity)
-                                     .frame(height: 56)
-                             }
-                             .buttonStyle(.borderedProminent)
-                             .clipShape(RoundedRectangle(cornerRadius: 14))
-                             .padding(.horizontal)
-                             .shadow(radius: 2)
-                             .disabled(selectedImage == nil)
+                            PhotosPicker(selection: $selectedItem, matching: .images) {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "photo.badge.plus")
+                                        .font(.system(size: 48))
+                                        .foregroundStyle(Color.accentColor)
+                                    
+                                    VStack(spacing: 4) {
+                                        Text("Select Screenshot")
+                                            .font(.headline)
+                                            .foregroundStyle(.primary)
+                                        Text("Tap to browse your library")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 300)
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
+                                        .foregroundStyle(Color.accentColor.opacity(0.3))
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .padding(.bottom, 20)
+                    .padding(.horizontal)
+                    .padding(.top, 20)
+                    
+                    // MARK: - Status & Info
+                    if aiService.isAnalyzing || isUploading {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .controlSize(.large)
+                            Text(statusText)
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+                    } else if selectedImage != nil {
+                        Text("Ready to Analyze")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
-            .navigationTitle("Add Media")
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("New Inspiration")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -90,7 +94,18 @@ struct ScreenshotIngestionView: View {
                         isPresented = false
                     }
                 }
+                
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Analyze & Save") {
+                        if let img = selectedImage {
+                            startAnalysis(image: img)
+                        }
+                    }
+                    .disabled(selectedImage == nil || aiService.isAnalyzing || isUploading)
+                    .fontWeight(.semibold)
+                }
             }
+            .interactiveDismissDisabled(aiService.isAnalyzing || isUploading)
             .onAppear {
                 if let external = externalImage {
                     selectedImage = external
@@ -106,44 +121,43 @@ struct ScreenshotIngestionView: View {
                     }
                 }
             }
-
-        }
-        .alert("Already Saved", isPresented: Binding<Bool>(
-            get: { duplicateAlertItem != nil },
-            set: { if !$0 { duplicateAlertItem = nil } }
-        )) {
-            Button("OK") {
-                duplicateAlertItem = nil
-                isPresented = false // Dismiss sheet
+            .alert("Duplicate Link", isPresented: Binding<Bool>(
+                get: { duplicateAlertItem != nil },
+                set: { if !$0 { duplicateAlertItem = nil } }
+            )) {
+                Button("OK") {
+                    duplicateAlertItem = nil
+                    isPresented = false
+                }
+            } message: {
+                Text("This URL is already in your collection.")
             }
-        } message: {
-            Text("We found this exact link in your collection already.")
         }
     }
-
+    
+    // MARK: - Helpers
+    
+    private var statusText: String {
+        if isUploading { return "Uploading..." }
+        if aiService.isAnalyzing { return "Analyzing with AI..." }
+        return ""
+    }
     
     func startAnalysis(image: UIImage) {
         Task {
             let result = await aiService.analyze(image: image)
-            // Save regardless of URL presence (it might be just an image inspiration)
             saveToModel(result: result)
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-            isPresented = false
         }
     }
     
-    // Cloud Upload State
-    @State private var isUploading = false
-    
-    func saveToModel(result: HuggingFaceService.AnalysisResult) {
+    func saveToModel(result: NvidiaAIService.AnalysisResult) {
         guard let image = selectedImage, let imageData = image.jpegData(compressionQuality: 0.8) else { return }
         
         isUploading = true
         
         Task {
             do {
-                // 1. Upload Image to Supabase Storage
+                // 1. Upload Image
                 let filename = "\(UUID().uuidString).jpg"
                 let publicUrl = try await SupabaseStorageService.shared.uploadImage(data: imageData, filename: filename)
                 
@@ -157,52 +171,46 @@ struct ScreenshotIngestionView: View {
                     finalUrl = URL(string: cleanUrl)
                 }
                 
-                // Check for Duplicates (Pre-Save)
-                if let finalUrl = finalUrl?.absoluteString {
-                    let exists = try? await SupabaseDBService.shared.checkIfURLExists(url: finalUrl)
+                // Check Duplicates
+                if let finalString = finalUrl?.absoluteString {
+                    let exists = try? await SupabaseDBService.shared.checkIfURLExists(url: finalString)
                     if exists == true {
                         await MainActor.run {
                             isUploading = false
-                            duplicateAlertItem = finalUrl
+                            duplicateAlertItem = finalString
                         }
-                        return // Stop saving
+                        return
                     }
                 }
                 
                 let type: SavedItem.ItemType = result.category.lowercased().contains("app") ? .app : .website
                 
-                // Create Item (Optimistic Cloud Model)
                 let newItem = SavedItem(
                     id: UUID(),
                     url: finalUrl,
                     timestamp: Date(),
                     type: type,
-                    screenshotData: nil, // We rely on Supabase Storage now!
+                    screenshotData: nil,
                     s3Url: publicUrl,
                     title: result.title,
                     summary: result.summary,
-                    tags: (result.tags ?? []) + [result.category] // Merge custom tags with category
+                    tags: (result.tags ?? []) + [result.category]
                 )
                 
-                // 3. Save Metadata to Supabase DB
+                // 3. Save
                 try await SupabaseDBService.shared.saveItem(item: newItem, imageURL: publicUrl)
-                
-                // 4. Local SwiftData: REMOVED to prevent duplicates in hybrid views.
-                // modelContext.insert(newItem)
                 
                 await MainActor.run {
                     isUploading = false
                     let generator = UINotificationFeedbackGenerator()
                     generator.notificationOccurred(.success)
-                    NotificationCenter.default.post(name: NSNotification.Name("ItemSaved"), object: nil) // Trigger Home Refresh
+                    NotificationCenter.default.post(name: NSNotification.Name("ItemSaved"), object: nil)
                     isPresented = false
                 }
                 
             } catch {
                 print("❌ Cloud Save Failed: \(error)")
-                await MainActor.run {
-                    isUploading = false
-                }
+                await MainActor.run { isUploading = false }
             }
         }
     }

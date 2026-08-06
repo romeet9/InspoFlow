@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct AIChatView: View {
-    @StateObject private var hfService = NvidiaAIService()
+    @StateObject private var hfService = HuggingFaceService()
     @State private var messageText = ""
     @State private var messages: [ChatMessage] = [
-        ChatMessage(text: "Hello! I can help you find design inspiration or answer UI/UX questions.", isUser: false)
+        ChatMessage(text: "Hello! Describe your project or problem, and I'll recommend some websites or design tools.", isUser: false)
     ]
     @FocusState private var isFocused: Bool
     
@@ -14,7 +14,7 @@ struct AIChatView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // 1. Live Ambient Background (Siri-like)
+                // 1. Live Ambient Background
                 AmbientBackground(animate: $animateGradient)
                     .ignoresSafeArea()
                     .onAppear { animateGradient = true }
@@ -23,7 +23,7 @@ struct AIChatView: View {
                     // Chats
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack(spacing: 20) {
+                            LazyVStack(spacing: 16) {
                                 ForEach(messages) { msg in
                                     ChatBubble(message: msg)
                                 }
@@ -37,9 +37,10 @@ struct AIChatView: View {
                                     .id("typing")
                                 }
                                 
+                                // Bottom Spacer to lift content above input bar
                                 Color.clear.frame(height: 60)
                             }
-                            .padding(.vertical, 20)
+                            .padding(.vertical)
                         }
                         .scrollIndicators(.hidden)
                         .onChange(of: messages.count) {
@@ -59,14 +60,18 @@ struct AIChatView: View {
                     // Input Bar
                     VStack(spacing: 0) {
                         Divider()
-                            .background(Color.white.opacity(0.1))
+                            .overlay(.white.opacity(0.1))
                             
                         HStack(alignment: .bottom, spacing: 12) {
-                            TextField("Ask something...", text: $messageText, axis: .vertical)
+                            TextField("Ask for recommendations...", text: $messageText, axis: .vertical)
                                 .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(.thinMaterial)
-                                .clipShape(Capsule())
+                                .padding(.vertical, 12)
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 24)
+                                        .stroke(.white.opacity(0.1), lineWidth: 0.5)
+                                )
                                 .focused($isFocused)
                                 .lineLimit(1...5)
                             
@@ -74,21 +79,21 @@ struct AIChatView: View {
                                 sendMessage()
                             } label: {
                                 Image(systemName: "arrow.up.circle.fill")
-                                    .font(.system(size: 32))
+                                    .font(.system(size: 34))
                                     .symbolRenderingMode(.palette)
-                                    .foregroundStyle(.white, messageText.isEmpty ? Color.secondary.opacity(0.5) : Color.blue)
+                                    .foregroundStyle(.white, messageText.isEmpty ? .white.opacity(0.1) : .blue)
                             }
                             .disabled(messageText.isEmpty || hfService.isAnalyzing)
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
-                        .background(.ultraThinMaterial)
+                        .background(.ultraThinMaterial) // Glass Input Bar
                     }
                 }
             }
-            .navigationTitle("Assistant")
+            .navigationTitle("AI Assistant")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar) // Transparent Navbar
         }
     }
     
@@ -134,36 +139,29 @@ struct ChatBubble: View {
     
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: 12) {
+            // ... (keep existing bubble header/text logic)
             HStack(alignment: .bottom, spacing: 8) {
                 if message.isUser {
                     Spacer()
                 } else {
-                    // AI Avatar
                     Image(systemName: "sparkles")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.white) // Keep Icon White for contrast on gradient
                         .frame(width: 30, height: 30)
                         .background(
-                            LinearGradient(colors: [.cyan, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .clipShape(Circle())
+                        // Shadow usually fine, but can adapt if needed
+                        .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 2)
                 }
                 
                 if !message.links.isEmpty && !message.isUser {
-                    // Should we hide text if links exist? The request from previous context said "hide text bubble".
-                    // I'll keep it simple: Show text if no links, or if text is long.
-                    // Actually, let's show text always for clarity, but clean.
-                     Text(.init(message.text))
-                        .font(.system(.body, design: .default))
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(.ultraThinMaterial)
-                        .clipShape(ContainerRelativeShape())
-                        .cornerRadius(18)
+                    // If we have links from AI, hide the text bubble to keep it clean (as requested)
+                    EmptyView()
                 } else {
                     Text(.init(message.text))
-                        .font(.system(.body, design: .default))
+                        .font(.system(size: 16, design: .default))
                         .foregroundStyle(message.isUser ? .white : .primary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
@@ -174,31 +172,38 @@ struct ChatBubble: View {
                                 Rectangle().fill(.ultraThinMaterial)
                             }
                         }
-                        .clipShape(Rectangle()) // Placeholder for CornerRadius
-                        .cornerRadius(18)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(message.isUser ? Color.white.opacity(0) : Color.primary.opacity(0.1), lineWidth: 0.5)
+                        )
+                        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
                 }
                 
                 if !message.isUser {
                     Spacer()
                 }
             }
-            .padding(.horizontal, 16)
             
-            // Link Previews (Only for AI)
+            // Link Previews (Only for AI) - Render ALL links
             if !message.isUser && !message.links.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(message.links, id: \.self) { url in
                         LinkPreviewCard(url: url)
                     }
                 }
-                .padding(.leading, 54) // Align with text
+                .padding(.leading, 38) // Align with text
                 .padding(.trailing, 16)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        .padding(.horizontal)
     }
 }
 
 struct TypingIndicator: View {
+    @State private var numberOfDots = 0
+    
     var body: some View {
         HStack(spacing: 4) {
              ForEach(0..<3) { _ in
@@ -209,8 +214,11 @@ struct TypingIndicator: View {
         }
         .padding(14)
         .background(.ultraThinMaterial)
-        .clipShape(ContainerRelativeShape())
-        .cornerRadius(18)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+             RoundedRectangle(cornerRadius: 20)
+                 .stroke(.white.opacity(0.2), lineWidth: 0.5)
+        )
     }
 }
 
@@ -221,23 +229,34 @@ struct AmbientBackground: View {
     
     var body: some View {
         ZStack {
+            // Adaptive Base Color
             (colorScheme == .dark ? Color.black : Color(uiColor: .systemBackground))
             
-            // Subtle Blobs
+            // Abstract Blobs
             Group {
+                // Blob 1
                 Circle()
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.blue.opacity(0.15))
                     .frame(width: 300, height: 300)
                     .blur(radius: 60)
                     .offset(x: animate ? -100 : 100, y: animate ? -150 : 0)
                     .animation(.easeInOut(duration: 7).repeatForever(autoreverses: true), value: animate)
                 
+                // Blob 2
                 Circle()
-                    .fill(Color.cyan.opacity(0.1))
+                    .fill(Color.purple.opacity(0.15))
                     .frame(width: 350, height: 350)
                     .blur(radius: 60)
                     .offset(x: animate ? 150 : -50, y: animate ? 200 : -100)
                     .animation(.easeInOut(duration: 9).repeatForever(autoreverses: true), value: animate)
+                    
+                // Blob 3
+                Circle()
+                    .fill(Color.cyan.opacity(0.1))
+                    .frame(width: 400, height: 400)
+                    .blur(radius: 80)
+                    .offset(x: animate ? -50 : 150, y: animate ? 100 : 250)
+                    .animation(.easeInOut(duration: 11).repeatForever(autoreverses: true), value: animate)
             }
         }
     }

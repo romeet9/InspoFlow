@@ -5,23 +5,17 @@ struct SearchView: View {
     @State private var searchResults: [SavedItem] = []
     @State private var isLoading = false
     
-    // Grid Setup (Same as Home)
+    // Grid Setup
     let columns = [
-        GridItem(.adaptive(minimum: 160, maximum: .infinity), spacing: 16)
+        GridItem(.adaptive(minimum: 160), spacing: 20)
     ]
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 if isLoading {
-                    VStack {
-                        ProgressView()
-                            .controlSize(.large)
-                        Text("Searching...")
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 8)
-                    }
-                    .padding(.top, 50)
+                    ProgressView("Searching...")
+                        .padding(.top, 50)
                 } else if searchResults.isEmpty && !searchText.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                         .padding(.top, 50)
@@ -29,11 +23,11 @@ struct SearchView: View {
                     ContentUnavailableView(
                         "Search Collection",
                         systemImage: "magnifyingglass",
-                        description: Text("Find inspiration by title, tag, or description.")
+                        description: Text("Find inspiration by title or summary.")
                     )
                     .padding(.top, 50)
                 } else {
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: 24) {
                         ForEach(searchResults) { item in
                             NavigationLink(destination: DetailView(item: item)) {
                                 InspoCardView(item: item)
@@ -41,14 +35,11 @@ struct SearchView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 20)
+                    .padding()
                 }
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle("Search")
-            .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, prompt: "Search designs, apps...")
+            .searchable(text: $searchText, prompt: "Search Designs, Apps, colors...")
             .onSubmit(of: .search) {
                 Task { await performSearch() }
             }
@@ -56,6 +47,7 @@ struct SearchView: View {
                 if newValue.isEmpty {
                     searchResults = []
                 } else {
+                    // Optional: Live search with debounce (manual debounce omitted for brevity)
                      Task { await performSearch() }
                 }
             }
@@ -63,13 +55,13 @@ struct SearchView: View {
     }
     
     private func performSearch() async {
-        guard !searchText.isEmpty else { return }
+        guard !searchText.isEmpty else { return } // Don't search empty
         
         isLoading = true
         do {
             let items = try await SupabaseDBService.shared.searchItems(query: searchText)
             await MainActor.run {
-                withAnimation(.smooth) {
+                withAnimation {
                     self.searchResults = items
                 }
                 self.isLoading = false

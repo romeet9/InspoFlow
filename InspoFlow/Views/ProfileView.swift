@@ -11,31 +11,37 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Section 1: Info
-                Section("About You") {
-                    TextField("Name", text: $userName)
-                    TextField("Bio", text: $userBio, axis: .vertical)
-                        .lineLimit(3...6)
+                // MARK: - Header Section
+                Section {
+                    HStack(spacing: 16) {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 60, height: 60)
+                            .foregroundStyle(.gray.opacity(0.3))
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("Name", text: $userName)
+                                .font(.headline)
+                            
+                            TextField("Bio", text: $userBio)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 8)
                 }
                 
-                // Section 2: Stats
-                Section("Statistics") {
-                    HStack {
-                        Text("Inspirations Collected")
-                        Spacer()
-                        Text("\(savedItems.count)")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Websites")
-                        Spacer()
-                        Text("\(savedItems.filter { $0.url != nil }.count)")
-                            .foregroundStyle(.secondary)
-                    }
+                // MARK: - Stats Section
+                Section {
+                    LabeledContent("Inspirations", value: "\(savedItems.count)")
+                    LabeledContent("Websites", value: "\(savedItems.filter { $0.url != nil }.count)")
+                    LabeledContent("Apps", value: "\(savedItems.filter { $0.type == .app }.count)")
+                } header: {
+                    Text("Collection Stats")
                 }
                 
-                // Section 3: Share
+                // MARK: - Actions
                 Section {
                     ShareLink(
                         item: generateShareSummary(),
@@ -44,19 +50,27 @@ struct ProfileView: View {
                     ) {
                         Label("Share Profile", systemImage: "square.and.arrow.up")
                     }
+                    .foregroundStyle(.blue)
                 }
                 
-                // Section 4: Account
                 Section {
                     Button(role: .destructive, action: signOut) {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
+                } footer: {
+                    Text("InspoFlow v1.0.0")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top)
                 }
             }
             .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
     
+    // Logic (Unchanged)
     private func signOut() {
         do {
             try Auth.auth().signOut()
@@ -74,7 +88,7 @@ struct ProfileView: View {
         Name: \(userName)
         Bio: \(userBio)
         
-        I've collected \(savedItems.count) design inspirations!
+        I've collected \(savedItems.count) inspirations on InspoFlow!
         """
     }
 }

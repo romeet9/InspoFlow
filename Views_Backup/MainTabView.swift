@@ -10,7 +10,7 @@ struct RootTabView: View {
             // Tab 1: Home (Using New GridHomeView)
             GridHomeView()
                 .tabItem {
-                    Label("Library", systemImage: "square.grid.2x2.fill")
+                    Label("Home", systemImage: "house.fill")
                 }
                 .tag(0)
             

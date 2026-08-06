@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-// RENAMED TO FORCE RECOMPILE
 struct GridHomeView: View {
     // Cloud Persistence
     @State private var savedItems: [SavedItem] = []
@@ -34,148 +33,165 @@ struct GridHomeView: View {
         return savedItems.filter { $0.tags.contains(selectedTag) }
     }
     
-    // Single Column Layout
+    // Flexible Grid - Apple Style
     let columns = [
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.adaptive(minimum: 160, maximum: .infinity), spacing: 16)
     ]
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                if isLoading && savedItems.isEmpty {
-                    ProgressView("Loading from Cloud...")
-                        .padding(.top, 50)
-                } else if savedItems.isEmpty {
-                    ContentUnavailableView(
-                        "No Inspirations",
-                        systemImage: "sparkles.rectangle.stack",
-                        description: Text("Add screenshots to start building your collection.")
-                    )
-                    .padding(.top, 50)
-                } else {
-
-                    // Filter Bar
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(allTags, id: \.self) { tag in
-                                TagPill(tag: tag, isSelected: selectedTag == tag) {
-                                    withAnimation {
-                                        selectedTag = tag
-                                    }
+                // Filter Bar Section
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(allTags, id: \.self) { tag in
+                            TagPill(tag: tag, isSelected: selectedTag == tag) {
+                                withAnimation(.snappy) {
+                                    selectedTag = tag
                                 }
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
                     }
-                    .background(Color(.systemGroupedBackground)) // Ensure touch doesn't pass through empty space
-                    .zIndex(1) // Ensure it sits above the grid if scrolling overlaps
-
-                    LazyVGrid(columns: columns, alignment: .center, spacing: 16) { // Reduced to standard HIG spacing
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+                }
+                
+                if isLoading && savedItems.isEmpty {
+                    VStack {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text("Loading Library...")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 100)
+                } else if savedItems.isEmpty {
+                    ContentUnavailableView(
+                        "No Items",
+                        systemImage: "square.stack.3d.up.slash",
+                        description: Text("Tap + to add your first inspiration.")
+                    )
+                    .padding(.top, 50)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(filteredItems) { item in
                             cardView(for: item)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16)
                     .padding(.bottom, 20)
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Library")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                // Primary Action: Add
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showIngestionSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .fontWeight(.semibold)
+                    }
+                }
+                
+                // Secondary Action: More Menu (Select, Theme)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Section {
+                            Button {
+                                startSelectionMode()
+                            } label: {
+                                Label("Select", systemImage: "checkmark.circle")
+                            }
+                        }
+                        
+                        Section {
+                            Button {
+                                ThemeTransition.toggleTheme(isDarkMode: $isDarkMode)
+                            } label: {
+                                Label(isDarkMode ? "Light Mode" : "Dark Mode", systemImage: isDarkMode ? "sun.max" : "moon")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+                
+                // Selection Mode Toolbar
+                if isSelectionMode {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") {
+                            isSelectionMode = false
+                            selectedItems.removeAll()
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .bottomBar) {
+                        HStack {
+                            Button(role: .destructive) {
+                                deleteSelection()
+                            } label: {
+                                Text("Delete")
+                                    .foregroundStyle(.red)
+                            }
+                            .disabled(selectedItems.isEmpty)
+                            Spacer()
+                            Text("\(selectedItems.count) Selected")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                    }
                 }
             }
             .refreshable {
                 await loadData()
             }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ItemSaved"))) { _ in
+        }
+        .sheet(isPresented: $showIngestionSheet) {
+             ScreenshotIngestionView(isPresented: $showIngestionSheet)
+        }
+        .onChange(of: showIngestionSheet) { oldValue, newValue in
+            if !newValue {
                 Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
                     await loadData()
                 }
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("InspoFlow")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 16) {
-                        if isSelectionMode {
-                            Button(role: .destructive) {
-                                deleteSelection()
-                            } label: {
-                                Text("Delete (\(selectedItems.count))")
-                                    .foregroundStyle(.red)
-                            }
-                            .disabled(selectedItems.isEmpty)
-                        } else {
-                            // Dark Mode Toggle
-                            Button {
-                                ThemeTransition.toggleTheme(isDarkMode: $isDarkMode)
-                            } label: {
-                                Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
-                                    .contentTransition(.symbolEffect(.replace))
-                            }
-                            
-                            Button {
-                                startSelectionMode()
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                            
-                            Button {
-                                showIngestionSheet = true
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                }
-                
-                if isSelectionMode {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Cancel") {
-                            isSelectionMode = false
-                            selectedItems.removeAll()
-                        }
-                    }
+        }
+        .task {
+            await loadData()
+        }
+        // Custom Tag Alert
+        .alert("Add Tag", isPresented: $showCustomTagAlert) {
+            TextField("Tag Name", text: $customTagInput)
+            Button("Cancel", role: .cancel) { }
+            Button("Save") {
+                if let item = itemToTag {
+                    Task { await addCustomTag(to: item, tag: customTagInput) }
                 }
             }
-            .sheet(isPresented: $showIngestionSheet) {
-                 ScreenshotIngestionView(isPresented: $showIngestionSheet)
-            }
-            .onChange(of: showIngestionSheet) { oldValue, newValue in
-                if !newValue {
-                    // Sheet dismissed, refresh data
-                    Task {
-                        // Small delay to ensure DB write propagation
-                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
-                        await loadData()
-                    }
-                }
-            }
-            .task {
-                await loadData()
-            }
-            .alert("Add Custom Tag", isPresented: $showCustomTagAlert) {
-                TextField("Tag Name", text: $customTagInput)
-                Button("Cancel", role: .cancel) { }
-                Button("Add") {
-                    if let item = itemToTag {
-                        Task {
-                            await addCustomTag(to: item, tag: customTagInput)
-                        }
-                    }
-                }
-            } message: {
-                Text("Enter a new tag for this inspiration.")
-            }
+        } message: {
+            Text("Create a new tag to organize your collection.")
+        }
+        // Observe external saves
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ItemSaved"))) { _ in
+            Task { await loadData() }
         }
     }
     
-    // MARK: - Cloud Data
+    // MARK: - Logic & Components
     
     private func loadData() async {
         isLoading = true
         do {
-             // In a real app, you'd likely paginate or cache this better.
              let items = try await SupabaseDBService.shared.fetchItems()
              await MainActor.run {
-                 withAnimation {
+                 withAnimation(.smooth) {
                      self.savedItems = items.sorted(by: { $0.timestamp > $1.timestamp })
                  }
                  self.isLoading = false
@@ -186,8 +202,6 @@ struct GridHomeView: View {
         }
     }
     
-    // MARK: - Components
-    
     @ViewBuilder
     private func cardView(for item: SavedItem) -> some View {
         Group {
@@ -197,13 +211,22 @@ struct GridHomeView: View {
                 } label: {
                     InspoCardView(item: item)
                         .overlay(alignment: .topTrailing) {
-                            Image(systemName: selectedItems.contains(item) ? "checkmark.circle.fill" : "circle")
-                                .font(.title2)
-                                .foregroundStyle(selectedItems.contains(item) ? .blue : .white)
-                                .background(Circle().fill(.white.opacity(0.5)))
-                                .padding(10)
+                            if selectedItems.contains(item) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.blue)
+                                    .background(Circle().fill(.white))
+                                    .padding(8)
+                            } else {
+                                Image(systemName: "circle")
+                                    .font(.title3)
+                                    .foregroundStyle(.white.opacity(0.8))
+                                    .shadow(radius: 2)
+                                    .padding(8)
+                            }
                         }
-                        .opacity(isSelectionMode && !selectedItems.contains(item) ? 0.7 : 1.0)
+                        .scaleEffect(selectedItems.contains(item) ? 0.95 : 1.0)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedItems.contains(item))
                 }
                 .buttonStyle(.plain)
             } else {
@@ -217,26 +240,28 @@ struct GridHomeView: View {
                         customTagInput = ""
                         showCustomTagAlert = true
                     } label: {
-                        Label("Add Custom Tag", systemImage: "tag")
+                        Label("Add Tag", systemImage: "tag")
                     }
                     
+                    Divider()
+                    
                     Button(role: .destructive) {
-                        Task {
-                            await deleteSingleItem(item)
-                        }
+                        Task { await deleteSingleItem(item) }
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
+                } preview: {
+                    InspoCardView(item: item)
                 }
             }
         }
     }
     
-    // MARK: - Actions
-    
     private func startSelectionMode() {
-        isSelectionMode = true
-        selectedItems.removeAll()
+        withAnimation {
+            isSelectionMode = true
+            selectedItems.removeAll()
+        }
     }
     
     private func toggleSelection(for item: SavedItem) {
@@ -251,73 +276,59 @@ struct GridHomeView: View {
         Task {
             isLoading = true
             for item in selectedItems {
-                do {
-                    try await SupabaseDBService.shared.deleteItem(id: item.id)
-                } catch {
-                    print("Failed to delete \(item.id): \(error)")
-                }
+                try? await SupabaseDBService.shared.deleteItem(id: item.id)
             }
             await loadData()
-            
             await MainActor.run {
-                selectedItems.removeAll()
-                isSelectionMode = false
+                withAnimation {
+                    selectedItems.removeAll()
+                    isSelectionMode = false
+                }
             }
         }
     }
     
     private func deleteSingleItem(_ item: SavedItem) async {
-        do {
-            try await SupabaseDBService.shared.deleteItem(id: item.id)
-            await loadData()
-        } catch {
-            print("Failed to delete item: \(error)")
-        }
+        try? await SupabaseDBService.shared.deleteItem(id: item.id)
+        await loadData()
     }
     
     private func addCustomTag(to item: SavedItem, tag: String) async {
         guard !tag.isEmpty else { return }
-        // Local update
         var newTags = item.tags
-        if !newTags.contains(tag) {
-            newTags.append(tag)
-        }
+        if !newTags.contains(tag) { newTags.append(tag) }
         item.tags = newTags
-        
-        // Optimistic UI
         if let idx = savedItems.firstIndex(where: { $0.id == item.id }) {
             savedItems[idx] = item
         }
-        
-        // Cloud update
-        do {
-            // Need a dedicated update method or just re-save. For MVP, re-save metadata.
-            try await SupabaseDBService.shared.saveItem(item: item, imageURL: item.s3Url ?? "")
-        } catch {
-            print("Failed to add tag: \(error)")
-        }
+        try? await SupabaseDBService.shared.saveItem(item: item, imageURL: item.s3Url ?? "")
     }
 }
 
+// MARK: - Native Filter Pill
 struct TagPill: View {
     let tag: String
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
-        Text(tag.capitalized)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(isSelected ? .white : .primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(isSelected ? Color.accentColor : Color(.systemGray5))
-            )
-            .contentShape(Rectangle()) // Ensure the whole area captures the tap
-            .onTapGesture {
-                action()
-            }
+        Button(action: action) {
+            Text(tag)
+                .font(.system(.subheadline, design: .default, weight: isSelected ? .semibold : .regular))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .foregroundStyle(isSelected ? .white : .primary)
+                .background {
+                    if isSelected {
+                        Capsule()
+                            .fill(Color.primary) // Black in light, White in dark (Apple standard)
+                    } else {
+                        Capsule()
+                            .fill(Color(.secondarySystemFill)) // Subtle system fill
+                    }
+                }
+        }
+        .buttonStyle(.plain)
     }
 }
 
